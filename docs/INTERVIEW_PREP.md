@@ -76,6 +76,9 @@ Fourteen tests reconcile rows and revenue from the raw files through every table
 **"Tell me about a data quality issue."**
 The purchase tracking gap. Views kept flowing while purchases stopped for 48 hours, and then 17 Nov showed a 15.5% conversion spike. The first clue was that the weekend effect looked too large, so I checked hourly event counts.
 
+**"Your two monthly revenue tables disagree by $44,649. Which one is wrong?"**
+Neither. `mart_daily_kpis` dates revenue by **session start**, and `mart_category_month` dates it by **purchase time**. $44,648.91 comes from sessions that started in October and bought in November. The grand totals match to the cent. Before comparing two numbers, always check that they use the same date definition.
+
 **"Cart abandonment is 55–74%. Is that real?"**
 Not reliable for October. 54% of buying sessions in October had no cart event, against 16% in November, which points to a tracking change around 14 Oct. So I used view → purchase as the main funnel metric.
 

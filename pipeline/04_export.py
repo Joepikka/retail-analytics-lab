@@ -46,8 +46,9 @@ def add_table_sheet(wb, title, cols, rows, formats=None):
     table.tableStyleInfo = TableStyleInfo(name="TableStyleMedium2", showRowStripes=True)
     ws.add_table(table)
     for i, col in enumerate(cols, start=1):
-        ws.column_dimensions[get_column_letter(i)].width = max(12, len(col) + 2)
         fmt = (formats or {}).get(col)
+        # Money values reach hundreds of millions; narrower columns show #####.
+        ws.column_dimensions[get_column_letter(i)].width = max(18 if fmt == "#,##0.00" else 12, len(col) + 2)
         if fmt:
             for row in ws.iter_rows(min_row=2, min_col=i, max_col=i):
                 row[0].number_format = fmt
@@ -65,6 +66,8 @@ def export_excel(con):
         "Sheets are Excel Tables: Insert > PivotTable on any of them to slice further.",
         "Summary sheet uses SUMIFS / AVERAGEIFS / XLOOKUP formulas over the tables.",
         "tracking_gap = TRUE marks 14-17 Nov 2019, when purchase logging stopped; averages exclude them.",
+        "Daily dates revenue by session start; CategoryMonth by purchase date. Monthly splits differ by",
+        "$44,648.91 (sessions started in Oct that bought in Nov); grand totals are identical.",
     ]
     for line in notes:
         readme.append([line])
