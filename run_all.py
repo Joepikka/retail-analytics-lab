@@ -6,7 +6,8 @@ from pathlib import Path
 
 PIPELINE = Path(__file__).resolve().parent / "pipeline"
 STEPS = ["01_ingest.py", "02_build_warehouse.py", "03_data_tests.py",
-         "05_ab_test_simulation.py", "04_export.py"]  # A/B before export so the dashboard gets it
+         "05_ab_test_simulation.py", "06_forecast.py",
+         "04_export.py"]  # A/B and forecast before export so the dashboard gets them
 
 sys.path.insert(0, str(PIPELINE))
 for step in STEPS:

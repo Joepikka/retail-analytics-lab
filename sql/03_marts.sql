@@ -164,6 +164,18 @@ WHERE days_since_previous IS NOT NULL
 GROUP BY days_since_previous
 ORDER BY days_since_previous;
 
+-- Q9. Category revenue by month (flat table; the Excel PivotTable source).
+CREATE OR REPLACE TABLE mart_category_month AS
+SELECT
+    strftime(f.date_key, '%Y-%m')  AS year_month,
+    p.main_category,
+    count(*)                       AS units_sold,
+    sum(f.price)                   AS revenue
+FROM fact_events f JOIN dim_product p USING (product_id)
+WHERE f.event_type = 'purchase' AND NOT f.is_bad_price
+GROUP BY ALL
+ORDER BY year_month, revenue DESC;
+
 -- Q8. Does conversion depend on price level? Price bands of viewed products.
 CREATE OR REPLACE TABLE mart_price_band AS
 WITH banded AS (

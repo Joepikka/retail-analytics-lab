@@ -9,7 +9,7 @@
     color-scheme: light;
     --surface-0: #f4f3f0; --surface-1: #fcfcfb; --border: #e2e0da;
     --text-primary: #0b0b0b; --text-secondary: #52514e; --text-muted: #7a7873;
-    --series-1: #2a78d6; --series-2: #eb6834; --grid: #ebe9e4;
+    --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --grid: #ebe9e4;
     --seq-0: #f1f6fd; --seq-1: #cde2fb; --seq-2: #9ec5f4; --seq-3: #5598e7; --seq-4: #256abf; --seq-5: #104281;
   }
   @media (prefers-color-scheme: dark) {
@@ -17,7 +17,7 @@
       color-scheme: dark;
       --surface-0: #111110; --surface-1: #1a1a19; --border: #2e2d2b;
       --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #8f8e86;
-      --series-1: #3987e5; --series-2: #d95926; --grid: #2a2928;
+      --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --grid: #2a2928;
       --seq-0: #1d2633; --seq-1: #104281; --seq-2: #1c5cab; --seq-3: #2a78d6; --seq-4: #6da7ec; --seq-5: #b7d3f6;
     }
   }
@@ -25,7 +25,7 @@
     color-scheme: dark;
     --surface-0: #111110; --surface-1: #1a1a19; --border: #2e2d2b;
     --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #8f8e86;
-    --series-1: #3987e5; --series-2: #d95926; --grid: #2a2928;
+    --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --grid: #2a2928;
     --seq-0: #1d2633; --seq-1: #104281; --seq-2: #1c5cab; --seq-3: #2a78d6; --seq-4: #6da7ec; --seq-5: #b7d3f6;
   }
   * { box-sizing: border-box; }
@@ -112,6 +112,14 @@
       <h2>Purchases per view by price band</h2>
       <p class="sub">Event-level: purchase events ÷ view events in each price band.</p>
       <div class="chart"><canvas id="price"></canvas></div>
+    </section>
+    <section class="card">
+      <h2>Revenue forecast vs baselines</h2>
+      <p class="sub" id="fcSub"></p>
+      <div class="legend"><span><i style="background:var(--series-1)"></i>Actual</span><span><i style="background:var(--series-2)"></i>Trend + weekday regression</span><span><i style="background:var(--series-3)"></i>Seasonal naive</span></div>
+      <div class="chart"><canvas id="forecast"></canvas></div>
+      <div class="scroll"><table id="fcTable"></table></div>
+      <p class="note" id="fcNote"></p>
     </section>
     <section class="card" id="abCard">
       <h2>A/B test design <span class="badge">simulated</span></h2>
@@ -271,6 +279,39 @@ new Chart(document.getElementById('price'), {
   options: { plugins: { tooltip: { callbacks: { label: c => `${fmtPct(c.raw, 2)} · ${fmtInt(D.price_bands[c.dataIndex].views)} views` } } },
              scales: { y: { beginAtZero: true, ticks: { callback: v => fmtPct(v, 1) } }, x: { grid: { display: false } } } },
 });
+
+const F = D.forecast;
+if (F) {
+  document.getElementById('fcSub').textContent =
+    `Trained on ${F.train[2]} clean days (${F.train[0]} – ${F.train[1]}), forecasting ${F.test[2]} days ahead (${F.test[0]} – ${F.test[1]}). Shaded band = 80% prediction interval.`;
+  const css3 = css('--series-2');
+  new Chart(document.getElementById('forecast'), {
+    type: 'line',
+    data: {
+      labels: F.daily.map(r => r.date.slice(5)),
+      datasets: [
+        { label: '80% upper', data: F.daily.map(r => r.regression_upper80), borderWidth: 0, pointRadius: 0, fill: '+1', backgroundColor: css3 + '22' },
+        { label: '80% lower', data: F.daily.map(r => r.regression_lower80), borderWidth: 0, pointRadius: 0, fill: false },
+        { label: 'Actual', data: F.daily.map(r => r.actual), borderColor: css('--series-1'), borderWidth: 2, pointRadius: 3 },
+        { label: 'Regression', data: F.daily.map(r => r.trend_weekday_regression), borderColor: css3, borderWidth: 2, pointRadius: 0, pointHoverRadius: 5 },
+        { label: 'Seasonal naive', data: F.daily.map(r => r.seasonal_naive), borderColor: css('--series-3'), borderWidth: 2, borderDash: [5, 4], pointRadius: 0, pointHoverRadius: 5 },
+      ],
+    },
+    options: {
+      interaction: { mode: 'index', intersect: false },
+      plugins: { tooltip: { filter: i => !i.dataset.label.startsWith('80%'), callbacks: { label: c => `${c.dataset.label}: ${fmtMoney(c.raw)}` } } },
+      scales: { y: { beginAtZero: true, ticks: { callback: fmtMoney } } },
+    },
+  });
+  const names = { trend_weekday_regression: 'Trend + weekday regression', seasonal_naive: 'Seasonal naive (same weekday last week)',
+                  weekday_mean_28d: 'Weekday mean, last 28 days', naive_last_day: 'Naive (last day repeated)' };
+  document.getElementById('fcTable').innerHTML =
+    '<tr><th>Model</th><th>MAPE</th><th>MAPE excl. Black Friday</th><th>MAE excl. BF</th></tr>' +
+    Object.entries(F.results).sort((a, b) => a[1].excluding_black_friday.mae - b[1].excluding_black_friday.mae)
+      .map(([k, r]) => `<tr><td>${names[k] || k}</td><td>${fmtPct(r.all_test_days.mape)}</td><td>${fmtPct(r.excluding_black_friday.mape)}</td><td>${fmtMoney(r.excluding_black_friday.mae)}</td></tr>`).join('');
+  document.getElementById('fcNote').textContent =
+    `80% interval covered ${fmtPct(F.regression_80pct_interval_coverage, 0)} of test days. Black Friday: actual ${fmtMoney(F.black_friday.actual)} vs forecast ${fmtMoney(F.black_friday.regression_forecast)} — a known event the model has no feature for. The regression's edge over seasonal naive is small on 13 test days.`;
+}
 
 const t = D.ab_test;
 document.getElementById('ab').innerHTML = !t ? '<p class="sub">Run pipeline step 05 to add this section.</p>' : `

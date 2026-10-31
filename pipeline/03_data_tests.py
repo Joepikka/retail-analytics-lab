@@ -50,6 +50,8 @@ def main():
                      < {TOLERANCE}"""),
         check(con, "repeat-buyer mart covers all buyer revenue",
               f"SELECT abs((SELECT sum(revenue) FROM mart_repeat_buyers) - (SELECT sum(revenue) FROM dim_user)) < {TOLERANCE}"),
+        check(con, "category-month mart covers all buyer revenue",
+              f"SELECT abs((SELECT sum(revenue) FROM mart_category_month) - (SELECT sum(revenue) FROM dim_user)) < {TOLERANCE}"),
         check(con, "cohort week-0 retention is 100%",
               "SELECT bool_and(retention = 1) FROM mart_cohort_retention WHERE weeks_since_first = 0"),
         check(con, "funnel rates are between 0 and 1",

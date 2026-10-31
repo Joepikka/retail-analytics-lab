@@ -10,6 +10,7 @@ An end-to-end analytics project. It processes 4.6 GB of compressed e-commerce cl
 3. Do first-time buyers come back, and how much revenue depends on repeat buyers?
 4. How concentrated is revenue across brands?
 5. How would we test a change to the checkout properly before rolling it out?
+6. How well can next fortnight's daily revenue be forecast, and does a model beat simple baselines?
 
 The answers are in [`reports/decision_memo.md`](reports/decision_memo.md).
 
@@ -39,9 +40,10 @@ raw .csv.gz ──01_ingest──▶ typed Parquet (zstd) ──02_build──�
 | 0 | `pipeline/00_download.py` | Parallel, resumable range download (the host throttles single connections) |
 | 1 | `pipeline/01_ingest.py` | Gzip CSV → typed Parquet. Records each file's SHA-256 and row count in `data/manifest.json`. A month is skipped when its hash is unchanged. |
 | 2 | `pipeline/02_build_warehouse.py` | Runs `sql/01_quality_and_clean.sql`, `02_star_schema.sql`, `03_marts.sql` |
-| 3 | `pipeline/03_data_tests.py` | 13 data tests covering row reconciliation, revenue reconciliation, keys, ranges. Exits non-zero on failure. |
+| 3 | `pipeline/03_data_tests.py` | 14 data tests covering row reconciliation, revenue reconciliation, keys, ranges. Exits non-zero on failure. |
 | 4 | `pipeline/05_ab_test_simulation.py` | Power analysis and a **simulated** A/B test built on the real baseline conversion |
-| 5 | `pipeline/04_export.py` | CSVs for Power BI/Tableau, `reports/retail_kpis.xlsx`, `dashboard/data.js` |
+| 5 | `pipeline/06_forecast.py` | 13-day daily revenue forecast: trend + weekday regression vs three baselines, with an 80% prediction interval |
+| 6 | `pipeline/04_export.py` | CSVs for Power BI/Tableau, `reports/retail_kpis.xlsx` (Tables, a SUMIFS category × month crosstab, and a Summary sheet whose Match column checks every formula against SQL), `dashboard/data.js` |
 
 ### Star schema
 
@@ -86,6 +88,8 @@ Every step can be rerun safely. Ingest skips unchanged files, and all SQL uses `
 - `reports/retail_kpis.xlsx`: Excel Tables plus a Summary sheet built with `SUMIFS`, `AVERAGEIFS`, `XLOOKUP` and `COUNTIFS`
 - `reports/csv/*.csv`: every mart, ready to load into Power BI or Tableau
 - `reports/decision_memo.md`: findings and recommendations
+- `docs/POWER_BI_GUIDE.md`: step-by-step rebuild of the dashboard in Power BI, with the data model and DAX measures
+- `docs/INTERVIEW_PREP.md`: how each part works, likely interview questions, and practice exercises
 
 ## Limitations
 

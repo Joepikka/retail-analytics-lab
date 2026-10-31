@@ -1,0 +1,201 @@
+{
+  "train": [
+    "2019-10-01",
+    "2019-11-13",
+    44
+  ],
+  "test": [
+    "2019-11-18",
+    "2019-11-30",
+    13
+  ],
+  "excluded_gap_days": "14-17 Nov 2019",
+  "results": {
+    "naive_last_day": {
+      "all_test_days": {
+        "mae": 650268.1492307696,
+        "rmse": 985881.5989125934,
+        "mape": 0.08059594793377317
+      },
+      "excluding_black_friday": {
+        "mae": 469850.24999999884,
+        "rmse": 626477.9072795736,
+        "mape": 0.06294416101183688
+      }
+    },
+    "seasonal_naive": {
+      "all_test_days": {
+        "mae": 552775.58923078,
+        "rmse": 777736.8996486644,
+        "mape": 0.06963885073123302
+      },
+      "excluding_black_friday": {
+        "mae": 441346.6150000109,
+        "rmse": 598021.8015598399,
+        "mape": 0.05908356570609621
+      }
+    },
+    "weekday_mean_28d": {
+      "all_test_days": {
+        "mae": 573157.9307692432,
+        "rmse": 786441.3819658891,
+        "mape": 0.07336880338574917
+      },
+      "excluding_black_friday": {
+        "mae": 445366.98520834587,
+        "rmse": 547905.0583889291,
+        "mape": 0.06124844243391268
+      }
+    },
+    "trend_weekday_regression": {
+      "all_test_days": {
+        "mae": 560940.9796287989,
+        "rmse": 832192.6511153546,
+        "mape": 0.07015043257065698
+      },
+      "excluding_black_friday": {
+        "mae": 418604.522797147,
+        "rmse": 566775.7237340742,
+        "mape": 0.05635680874865833
+      }
+    }
+  },
+  "best_model_excluding_black_friday": "trend_weekday_regression",
+  "regression_80pct_interval_coverage": 0.8461538461538461,
+  "black_friday": {
+    "actual": 9627618.010000017,
+    "regression_forecast": 7358639.548391394
+  },
+  "daily": [
+    {
+      "date": "2019-11-18",
+      "actual": 8248787.610000045,
+      "naive_last_day": 6812335.069999998,
+      "seasonal_naive": 7253031.979999994,
+      "weekday_mean_28d": 7439610.139999995,
+      "trend_weekday_regression": 7333349.431097545,
+      "regression_lower80": 6192696.0125240935,
+      "regression_upper80": 8474002.849670995
+    },
+    {
+      "date": "2019-11-19",
+      "actual": 7289176.150000013,
+      "naive_last_day": 6812335.069999998,
+      "seasonal_naive": 6781912.4599999925,
+      "weekday_mean_28d": 7090472.122499997,
+      "trend_weekday_regression": 6885531.304111482,
+      "regression_lower80": 5744877.88553803,
+      "regression_upper80": 8026184.722684933
+    },
+    {
+      "date": "2019-11-20",
+      "actual": 7087455.639999998,
+      "naive_last_day": 6812335.069999998,
+      "seasonal_naive": 6812335.069999998,
+      "weekday_mean_28d": 7113160.110000003,
+      "trend_weekday_regression": 7049803.236968623,
+      "regression_lower80": 5909149.818395171,
+      "regression_upper80": 8190456.655542074
+    },
+    {
+      "date": "2019-11-21",
+      "actual": 6968056.149999977,
+      "naive_last_day": 6812335.069999998,
+      "seasonal_naive": 7066990.820000013,
+      "weekday_mean_28d": 7503553.469999997,
+      "trend_weekday_regression": 6841821.213077798,
+      "regression_lower80": 5701167.794504346,
+      "regression_upper80": 7982474.631651249
+    },
+    {
+      "date": "2019-11-22",
+      "actual": 6988141.339999974,
+      "naive_last_day": 6812335.069999998,
+      "seasonal_naive": 7737694.730000006,
+      "weekday_mean_28d": 7520968.7325000055,
+      "trend_weekday_regression": 7427816.908077807,
+      "regression_lower80": 6287163.489504356,
+      "regression_upper80": 8568470.326651258
+    },
+    {
+      "date": "2019-11-23",
+      "actual": 6339693.789999981,
+      "naive_last_day": 6812335.069999998,
+      "seasonal_naive": 6643956.059999996,
+      "weekday_mean_28d": 6882372.729999998,
+      "trend_weekday_regression": 6715400.858077796,
+      "regression_lower80": 5574747.439504345,
+      "regression_upper80": 7856054.276651247
+    },
+    {
+      "date": "2019-11-24",
+      "actual": 6471192.7,
+      "naive_last_day": 6812335.069999998,
+      "seasonal_naive": 6628401.130000014,
+      "weekday_mean_28d": 6999122.33000001,
+      "trend_weekday_regression": 6887545.914744476,
+      "regression_lower80": 5746892.496171025,
+      "regression_upper80": 8028199.333317927
+    },
+    {
+      "date": "2019-11-25",
+      "actual": 7052964.99999999,
+      "naive_last_day": 6812335.069999998,
+      "seasonal_naive": 7253031.979999994,
+      "weekday_mean_28d": 7439610.139999995,
+      "trend_weekday_regression": 7264172.071411131,
+      "regression_lower80": 6123518.65283768,
+      "regression_upper80": 8404825.489984583
+    },
+    {
+      "date": "2019-11-26",
+      "actual": 6893304.439999985,
+      "naive_last_day": 6812335.069999998,
+      "seasonal_naive": 6781912.4599999925,
+      "weekday_mean_28d": 7090472.122499997,
+      "trend_weekday_regression": 6816353.944425069,
+      "regression_lower80": 5675700.525851618,
+      "regression_upper80": 7957007.36299852
+    },
+    {
+      "date": "2019-11-27",
+      "actual": 7158514.729999966,
+      "naive_last_day": 6812335.069999998,
+      "seasonal_naive": 6812335.069999998,
+      "weekday_mean_28d": 7113160.110000003,
+      "trend_weekday_regression": 6980625.87728221,
+      "regression_lower80": 5839972.4587087585,
+      "regression_upper80": 8121279.295855661
+    },
+    {
+      "date": "2019-11-28",
+      "actual": 7169916.299999993,
+      "naive_last_day": 6812335.069999998,
+      "seasonal_naive": 7066990.820000013,
+      "weekday_mean_28d": 7503553.469999997,
+      "trend_weekday_regression": 6772643.853391385,
+      "regression_lower80": 5631990.4348179335,
+      "regression_upper80": 7913297.271964836
+    },
+    {
+      "date": "2019-11-29",
+      "actual": 9627618.010000017,
+      "naive_last_day": 6812335.069999998,
+      "seasonal_naive": 7737694.730000006,
+      "weekday_mean_28d": 7520968.7325000055,
+      "trend_weekday_regression": 7358639.548391394,
+      "regression_lower80": 6217986.129817943,
+      "regression_upper80": 8499292.966964845
+    },
+    {
+      "date": "2019-11-30",
+      "actual": 8091452.690000014,
+      "naive_last_day": 6812335.069999998,
+      "seasonal_naive": 6643956.059999996,
+      "weekday_mean_28d": 6882372.729999998,
+      "trend_weekday_regression": 6646223.498391383,
+      "regression_lower80": 5505570.079817932,
+      "regression_upper80": 7786876.916964835
+    }
+  ]
+}

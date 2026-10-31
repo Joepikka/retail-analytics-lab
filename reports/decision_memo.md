@@ -71,6 +71,21 @@ Revenue depends heavily on **one category** (electronics, 76%), on **two brands*
 4. **Before scaling acquisition, start recording traffic source.** November's extra 4.5M sessions added almost no revenue. Spend cannot be judged without knowing where visitors come from.
 5. **Use a low-converting, high-traffic category as the first experiment target.** Apparel and furniture fit. A test sized like the one below could show whether a change to the product page or checkout closes part of the gap with electronics.
 
+## Can daily revenue be forecast?
+
+`pipeline/06_forecast.py` trains on 44 clean days (1 Oct – 13 Nov) and forecasts 13 days ahead (18–30 Nov) from a single origin. The tracking-gap days are excluded from both sets.
+
+| Model | MAPE, all test days | MAPE, excl. Black Friday |
+|---|---|---|
+| Trend + weekday regression | 7.0% | **5.6%** |
+| Seasonal naive (same weekday last week) | 7.0% | 5.9% |
+| Weekday mean of the last 28 days | 7.3% | 6.1% |
+| Naive (last day repeated) | 8.1% | 6.3% |
+
+- The regression is the best model, but only just. A 0.3-point edge over the seasonal-naive baseline on 13 days is not strong evidence. Daily revenue is stable enough that a one-line baseline gets you most of the way.
+- The 80% prediction interval covered 85% of test days, so its uncertainty estimate is about right.
+- Black Friday (29 Nov) came in at $9.63M against a $7.36M forecast. The models have no feature for promotional events, so planning for known sale days has to come from a separate uplift estimate.
+
 ## How a test should be run (simulated design)
 
 The historical data is not an experiment, so it cannot show what causes what. `pipeline/05_ab_test_simulation.py` uses the real baseline (5.96% session conversion, gap days excluded) to design a test of a cart-page change:
@@ -80,7 +95,7 @@ The historical data is not an experiment, so it cannot show what causes what. `p
 
 ## Limitations
 
-- The data covers two months of one store in 2019. Black Friday week (29 Nov) is the only seasonal signal, and it falls right at the end of the data.
+- The data covers two months of one store in 2019. Black Friday week (29 Nov) is the only seasonal signal, and it falls right at the end of the data. The forecast test window is only 13 days, too short to rank models with confidence.
 - There are no costs, margins, or returns, so these findings are about revenue, not profit.
 - Each purchase event is counted as one unit. If an event can hold more than one unit, revenue is understated.
 - "First purchase" means the first purchase seen since 1 Oct. Buyers from before October look like new buyers.
