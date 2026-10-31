@@ -133,7 +133,7 @@ def export_excel(con):
         ("Revenue Nov 2019", '=SUMIFS(Daily[revenue],Daily[date_key],">="&DATE(2019,11,1),Daily[date_key],"<"&DATE(2019,12,1))', money),
         ("electronics revenue share (XLOOKUP)", '=_xlfn.XLOOKUP("electronics",Categories[main_category],Categories[revenue_share],"not found")', pct),
         ("electronics cart abandon rate (XLOOKUP)", '=_xlfn.XLOOKUP("electronics",Categories[main_category],Categories[cart_abandon_rate],"not found")', pct),
-        ("Brands needed for 80% of revenue", '=COUNTIFS(Brands[cumulative_share],"<0.8")+1', "0"),
+        ("Brands needed for 80% of revenue", '=COUNTIFS(Brands[cumulative_share],"<"&0.8)+1', "0"),
         ("Crosstab grand total", f"=CategoryByMonth!{get_column_letter(len(months) + 2)}{total_row}", money),
     ]
     for i, ((label, formula, fmt), exp) in enumerate(zip(summary, expected), start=4):
