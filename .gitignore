@@ -1,0 +1,7 @@
+data/raw/
+data/staging/
+data/warehouse/
+data/tmp/
+data/sample_test/
+__pycache__/
+.claude/

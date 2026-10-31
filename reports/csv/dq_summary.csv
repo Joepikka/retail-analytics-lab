@@ -1,0 +1,2 @@
+staged_rows,view_rows,cart_rows,purchase_rows,other_event_rows,missing_category_code,missing_brand,missing_session,non_positive_price,first_event,last_event,staged_purchase_revenue
+109950743,104335509,3955446,1659788,0,35413780,15331243,12,256761,2019-10-01 00:00:00,2019-11-30 23:59:59,505152392.7699705

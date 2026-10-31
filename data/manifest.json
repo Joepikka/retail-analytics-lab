@@ -1,0 +1,12 @@
+{
+  "2019_10": {
+    "raw_file": "2019-Oct.csv.gz",
+    "raw_sha256": "8ebca1ad741295297368f2cf0315e3f36853a1a11768fb16babf8c9b83838147",
+    "raw_rows": 42448764
+  },
+  "2019_11": {
+    "raw_file": "2019-Nov.csv.gz",
+    "raw_sha256": "7d9932fdf2667f3d800655f55a623d7f71b22ff8d606da55bf93cfc307ebf213",
+    "raw_rows": 67501979
+  }
+}

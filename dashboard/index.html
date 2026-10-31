@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Retail Analytics Lab</title>
+<style>
+  :root {
+    color-scheme: light;
+    --surface-0: #f4f3f0; --surface-1: #fcfcfb; --border: #e2e0da;
+    --text-primary: #0b0b0b; --text-secondary: #52514e; --text-muted: #7a7873;
+    --series-1: #2a78d6; --series-2: #eb6834; --grid: #ebe9e4;
+    --seq-0: #f1f6fd; --seq-1: #cde2fb; --seq-2: #9ec5f4; --seq-3: #5598e7; --seq-4: #256abf; --seq-5: #104281;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --surface-0: #111110; --surface-1: #1a1a19; --border: #2e2d2b;
+      --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #8f8e86;
+      --series-1: #3987e5; --series-2: #d95926; --grid: #2a2928;
+      --seq-0: #1d2633; --seq-1: #104281; --seq-2: #1c5cab; --seq-3: #2a78d6; --seq-4: #6da7ec; --seq-5: #b7d3f6;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface-0: #111110; --surface-1: #1a1a19; --border: #2e2d2b;
+    --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #8f8e86;
+    --series-1: #3987e5; --series-2: #d95926; --grid: #2a2928;
+    --seq-0: #1d2633; --seq-1: #104281; --seq-2: #1c5cab; --seq-3: #2a78d6; --seq-4: #6da7ec; --seq-5: #b7d3f6;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--surface-0); color: var(--text-primary);
+         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1180px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 26px; margin: 0 0 4px; }
+  h2 { font-size: 17px; margin: 0 0 4px; }
+  .sub, .note { color: var(--text-secondary); margin: 0 0 12px; }
+  .note { font-size: 13px; color: var(--text-muted); margin-top: 8px; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin: 20px 0; }
+  .tile, .card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .tile .label { color: var(--text-secondary); font-size: 13px; }
+  .tile .value { font-size: 26px; font-weight: 650; font-variant-numeric: tabular-nums; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr)); gap: 16px; }
+  .card { min-width: 0; }
+  .chart { position: relative; height: 300px; }
+  .scroll { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
+  th, td { padding: 5px 8px; text-align: right; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; }
+  th { color: var(--text-secondary); font-weight: 600; }
+  .heat td { border: 2px solid var(--surface-1); text-align: center; padding: 4px 2px; min-width: 30px; }
+  .heat td.dark-cell { color: #fff; }
+  .badge { display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: 99px; border: 1px solid var(--border); color: var(--text-secondary); }
+  .legend { display: flex; gap: 16px; font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+  footer { margin-top: 32px; font-size: 13px; color: var(--text-muted); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Retail Analytics Lab</h1>
+  <p class="sub">Multi-category online store, 1 Oct – 30 Nov 2019. Event data (views, carts, purchases) modelled into a DuckDB star schema.</p>
+
+  <section class="tiles" id="tiles"></section>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Daily revenue</h2>
+      <p class="sub">Daily total and 7-day rolling average.</p>
+      <div class="legend"><span><i style="background:var(--series-1)"></i>Daily revenue</span><span><i style="background:var(--series-2)"></i>7-day average</span></div>
+      <div class="chart"><canvas id="daily"></canvas></div>
+      <p class="note" id="gapNote"></p>
+    </section>
+    <section class="card">
+      <h2>Revenue by category</h2>
+      <p class="sub">Top-level category from the product's category code.</p>
+      <div class="chart"><canvas id="categoryRevenue"></canvas></div>
+      <p class="note" id="unknownNote"></p>
+    </section>
+    <section class="card">
+      <h2>Category funnel</h2>
+      <p class="sub">Per session: viewed → carted → purchased in that category.</p>
+      <div class="scroll"><table id="funnelTable"></table></div>
+    </section>
+    <section class="card">
+      <h2>Cart abandonment by category</h2>
+      <p class="sub">Share of sessions that carted but did not buy in that category.</p>
+      <div class="chart"><canvas id="abandon"></canvas></div>
+    </section>
+    <section class="card">
+      <h2>Weekly buyer retention</h2>
+      <p class="sub">Cohort = week of first purchase seen. Cell = share of the cohort buying again N weeks later.</p>
+      <div class="scroll"><table class="heat" id="cohortTable"></table></div>
+    </section>
+    <section class="card">
+      <h2>Session conversion by hour (UTC)</h2>
+      <p class="sub">Share of sessions with a purchase, by weekday and hour.</p>
+      <div class="scroll"><table class="heat" id="hourTable"></table></div>
+    </section>
+    <section class="card">
+      <h2>Repeat buyers</h2>
+      <p class="sub">Share of buyers vs share of revenue, by purchases per buyer.</p>
+      <div class="legend"><span><i style="background:var(--series-1)"></i>Share of buyers</span><span><i style="background:var(--series-2)"></i>Share of revenue</span></div>
+      <div class="chart"><canvas id="repeat"></canvas></div>
+    </section>
+    <section class="card">
+      <h2>Brand concentration</h2>
+      <p class="sub" id="brandSub"></p>
+      <div class="chart"><canvas id="brands"></canvas></div>
+    </section>
+    <section class="card">
+      <h2>Purchases per view by price band</h2>
+      <p class="sub">Event-level: purchase events ÷ view events in each price band.</p>
+      <div class="chart"><canvas id="price"></canvas></div>
+    </section>
+    <section class="card" id="abCard">
+      <h2>A/B test design <span class="badge">simulated</span></h2>
+      <div id="ab"></div>
+    </section>
+    <section class="card">
+      <h2>Data quality</h2>
+      <p class="sub">Audit of staged rows and what cleaning changed.</p>
+      <div class="scroll"><table id="dqTable"></table></div>
+    </section>
+  </div>
+
+  <footer>Data: REES46 / Open CDP "eCommerce behavior data from multi category store". Revenue = sum of purchase-event prices (price &gt; 0), one unit per event. Hours are UTC as in the source.</footer>
+</main>
+
+<script src="data.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+const D = window.DASHBOARD_DATA;
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmtInt = v => Math.round(v).toLocaleString('en-US');
+const fmtMoney = v => '$' + (v >= 1e6 ? (v / 1e6).toFixed(2) + 'M' : v >= 1e3 ? (v / 1e3).toFixed(1) + 'k' : v.toFixed(2));
+const fmtPct = (v, d = 1) => (v * 100).toFixed(d) + '%';
+const sum = (rows, k) => rows.reduce((a, r) => a + (r[k] || 0), 0);
+
+// ---- tiles
+const revenue = sum(D.daily, 'revenue'), units = sum(D.daily, 'units_sold'), sessions = sum(D.daily, 'sessions');
+const clean = D.daily.filter(r => !r.tracking_gap);  // conversion excludes days with purchase-logging gaps
+const purchSessions = sum(clean, 'purchasing_sessions'), cleanSessions = sum(clean, 'sessions');
+const buyers = sum(D.repeat, 'buyers');
+const repeatShare = D.repeat.filter(r => r.sort_key > 1).reduce((a, r) => a + r.revenue_share, 0);
+const tiles = [
+  ['Revenue', fmtMoney(revenue)], ['Units sold', fmtInt(units)], ['Sessions', fmtInt(sessions)],
+  ['Session conversion*', fmtPct(purchSessions / cleanSessions, 2)], ['Buyers', fmtInt(buyers)],
+  ['Revenue from repeat buyers', fmtPct(repeatShare)],
+];
+document.getElementById('tiles').innerHTML = tiles.map(([l, v]) =>
+  `<div class="tile"><div class="label">${l}</div><div class="value">${v}</div></div>`).join('');
+
+// ---- chart defaults
+Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
+Chart.defaults.color = css('--text-secondary');
+Chart.defaults.borderColor = css('--grid');
+Chart.defaults.plugins.legend.display = false;
+Chart.defaults.maintainAspectRatio = false;
+const barStyle = { borderRadius: 4, borderSkipped: 'start', borderWidth: 0, maxBarThickness: 28 };
+
+const gapDays = D.daily.filter(r => r.tracking_gap).map(r => r.date_key.slice(5));
+document.getElementById('gapNote').textContent = gapDays.length
+  ? `* Purchase logging stopped on ${gapDays.join(', ')} while views continued (${D.gap_hours[0].hours} hours with traffic and zero purchases); the 17 Nov spike looks like a catch-up. These days are excluded from conversion figures and the hour heatmap.`
+  : '';
+new Chart(document.getElementById('daily'), {
+  type: 'line',
+  data: {
+    labels: D.daily.map(r => r.date_key.slice(5)),
+    datasets: [
+      { label: 'Daily revenue', data: D.daily.map(r => r.revenue), borderColor: css('--series-1'), borderWidth: 2, pointRadius: 0, pointHoverRadius: 5 },
+      { label: '7-day average', data: D.daily.map(r => r.revenue_7d_avg), borderColor: css('--series-2'), borderWidth: 2, pointRadius: 0, pointHoverRadius: 5 },
+    ],
+  },
+  options: {
+    interaction: { mode: 'index', intersect: false },
+    plugins: { tooltip: { callbacks: { label: c => `${c.dataset.label}: ${fmtMoney(c.raw)}` } } },
+    scales: { y: { beginAtZero: true, ticks: { callback: fmtMoney } }, x: { ticks: { maxTicksLimit: 10 } } },
+  },
+});
+
+const cats = D.categories.slice(0, 12);
+new Chart(document.getElementById('categoryRevenue'), {
+  type: 'bar',
+  data: { labels: cats.map(r => r.main_category), datasets: [{ data: cats.map(r => r.revenue), backgroundColor: css('--series-1'), ...barStyle }] },
+  options: { indexAxis: 'y', plugins: { tooltip: { callbacks: { label: c => `${fmtMoney(c.raw)} (${fmtPct(cats[c.dataIndex].revenue_share)} of revenue)` } } },
+             scales: { x: { ticks: { callback: fmtMoney } }, y: { grid: { display: false } } } },
+});
+const unk = D.unknown_category[0];
+if (unk) document.getElementById('unknownNote').textContent =
+  `Not shown: products with no category code ("unknown") — ${fmtMoney(unk.revenue)}, ${fmtPct(unk.revenue_share)} of revenue.`;
+
+document.getElementById('funnelTable').innerHTML =
+  '<tr><th>Category</th><th>Viewed</th><th>Carted</th><th>Bought</th><th>View→cart</th><th>View→buy</th></tr>' +
+  cats.map(r => `<tr><td>${r.main_category}</td><td>${fmtInt(r.sessions_viewed)}</td><td>${fmtInt(r.sessions_carted)}</td>
+    <td>${fmtInt(r.sessions_purchased)}</td><td>${fmtPct(r.view_to_cart)}</td><td>${fmtPct(r.view_to_purchase, 2)}</td></tr>`).join('');
+
+const ab = [...cats].filter(r => r.sessions_carted >= 1000).sort((a, b) => b.cart_abandon_rate - a.cart_abandon_rate);
+new Chart(document.getElementById('abandon'), {
+  type: 'bar',
+  data: { labels: ab.map(r => r.main_category), datasets: [{ data: ab.map(r => r.cart_abandon_rate), backgroundColor: css('--series-1'), ...barStyle }] },
+  options: { indexAxis: 'y', plugins: { tooltip: { callbacks: { label: c => `${fmtPct(c.raw)} of ${fmtInt(ab[c.dataIndex].sessions_carted)} carting sessions` } } },
+             scales: { x: { min: 0, max: 1, ticks: { callback: v => fmtPct(v, 0) } }, y: { grid: { display: false } } } },
+});
+
+// ---- heatmaps: sequential single-hue ramp, value always printed (never color alone)
+const seq = [0, 1, 2, 3, 4, 5].map(i => css('--seq-' + i));
+function heatCell(v, lo, hi, text, title) {
+  const t = hi > lo ? (v - lo) / (hi - lo) : 0;
+  const i = Math.min(5, Math.floor(t * 6));
+  const dark = document.documentElement.dataset.theme === 'dark' || (matchMedia('(prefers-color-scheme: dark)').matches && document.documentElement.dataset.theme !== 'light');
+  const strong = dark ? i <= 2 : i >= 4;
+  return `<td class="${strong ? 'dark-cell' : ''}" style="background:${seq[i]}" title="${title}">${text}</td>`;
+}
+
+const cohortWeeks = [...new Set(D.cohorts.map(r => r.cohort_week))].sort();
+const maxLag = Math.max(...D.cohorts.map(r => r.weeks_since_first));
+const later = D.cohorts.filter(r => r.weeks_since_first > 0).map(r => r.retention);
+const cLo = 0, cHi = Math.max(...later, 0.01);
+let ch = '<tr><th>Cohort</th><th>Buyers</th>' + Array.from({ length: maxLag }, (_, i) => `<th>+${i + 1}w</th>`).join('') + '</tr>';
+for (const w of cohortWeeks) {
+  const rows = D.cohorts.filter(r => r.cohort_week === w);
+  ch += `<tr><td>${w.slice(5)}</td><td>${fmtInt(rows[0].cohort_size)}</td>`;
+  for (let k = 1; k <= maxLag; k++) {
+    const r = rows.find(x => x.weeks_since_first === k);
+    ch += r ? heatCell(r.retention, cLo, cHi, fmtPct(r.retention), `${fmtInt(r.buyers)} buyers`) : '<td></td>';
+  }
+  ch += '</tr>';
+}
+document.getElementById('cohortTable').innerHTML = ch;
+
+const days = [...new Map(D.hour_dow.map(r => [r.iso_dow, r.day_name])).entries()].sort((a, b) => a[0] - b[0]);
+const conv = D.hour_dow.map(r => r.session_conversion);
+const hLo = Math.min(...conv), hHi = Math.max(...conv);
+let hh = '<tr><th>Day</th>' + Array.from({ length: 24 }, (_, h) => `<th>${h}</th>`).join('') + '</tr>';
+for (const [dow, name] of days) {
+  hh += `<tr><td>${name.slice(0, 3)}</td>`;
+  for (let h = 0; h < 24; h++) {
+    const r = D.hour_dow.find(x => x.iso_dow === dow && x.hour_utc === h);
+    hh += r ? heatCell(r.session_conversion, hLo, hHi, (r.session_conversion * 100).toFixed(1), `${name} ${h}:00 UTC — ${fmtInt(r.sessions)} sessions, ${fmtPct(r.session_conversion, 2)}`) : '<td></td>';
+  }
+  hh += '</tr>';
+}
+document.getElementById('hourTable').innerHTML = hh;
+
+new Chart(document.getElementById('repeat'), {
+  type: 'bar',
+  data: {
+    labels: D.repeat.map(r => r.buyer_segment),
+    datasets: [
+      { label: 'Share of buyers', data: D.repeat.map(r => r.buyer_share), backgroundColor: css('--series-1'), ...barStyle },
+      { label: 'Share of revenue', data: D.repeat.map(r => r.revenue_share), backgroundColor: css('--series-2'), ...barStyle },
+    ],
+  },
+  options: { plugins: { tooltip: { callbacks: { label: c => `${c.dataset.label}: ${fmtPct(c.raw)}` } } },
+             scales: { y: { beginAtZero: true, ticks: { callback: v => fmtPct(v, 0) } }, x: { grid: { display: false } } } },
+});
+
+document.getElementById('brandSub').textContent =
+  `${D.brands_for_80pct[0].n} of ${fmtInt(D.brand_count[0].n)} brands (incl. "unknown") make up 80% of revenue. Top 15 shown.`;
+new Chart(document.getElementById('brands'), {
+  type: 'bar',
+  data: { labels: D.brands.map(r => r.brand), datasets: [{ data: D.brands.map(r => r.revenue_share), backgroundColor: css('--series-1'), ...barStyle }] },
+  options: { indexAxis: 'y', plugins: { tooltip: { callbacks: { label: c => `${fmtPct(c.raw)} of revenue · cumulative ${fmtPct(D.brands[c.dataIndex].cumulative_share)}` } } },
+             scales: { x: { ticks: { callback: v => fmtPct(v, 0) } }, y: { grid: { display: false } } } },
+});
+
+new Chart(document.getElementById('price'), {
+  type: 'bar',
+  data: { labels: D.price_bands.map(r => r.price_band.slice(3)), datasets: [{ data: D.price_bands.map(r => r.purchases_per_view), backgroundColor: css('--series-1'), ...barStyle }] },
+  options: { plugins: { tooltip: { callbacks: { label: c => `${fmtPct(c.raw, 2)} · ${fmtInt(D.price_bands[c.dataIndex].views)} views` } } },
+             scales: { y: { beginAtZero: true, ticks: { callback: v => fmtPct(v, 1) } }, x: { grid: { display: false } } } },
+});
+
+const t = D.ab_test;
+document.getElementById('ab').innerHTML = !t ? '<p class="sub">Run pipeline step 05 to add this section.</p>' : `
+  <p class="sub">${t.hypothesis}. The historical data is not an experiment; this uses its real baseline to size and analyse a <strong>simulated</strong> test.</p>
+  <table>
+    <tr><td>Baseline session conversion</td><td>${fmtPct(t.baseline_session_conversion, 2)}</td></tr>
+    <tr><td>Design: α / power / minimum detectable lift</td><td>${t.alpha} / ${t.power} / ${fmtPct(t.mde_relative, 0)}</td></tr>
+    <tr><td>Sessions needed per arm</td><td>${fmtInt(t.sessions_per_arm_required)} (~${t.days_needed_at_full_traffic} days)</td></tr>
+    <tr><td>Split control / treatment (SRM p)</td><td>${fmtInt(t.n_control)} / ${fmtInt(t.n_treatment)} (${t.srm_p_value.toFixed(3)})</td></tr>
+    <tr><td>Conversion control → treatment</td><td>${fmtPct(t.p_control, 3)} → ${fmtPct(t.p_treatment, 3)}</td></tr>
+    <tr><td>Relative lift (true injected: ${fmtPct(t.true_lift_injected, 0)})</td><td>${fmtPct(t.rel_lift, 2)}</td></tr>
+    <tr><td>95% CI of absolute difference</td><td>${fmtPct(t.ci_low, 3)} to ${fmtPct(t.ci_high, 3)}</td></tr>
+    <tr><td>p-value (A/A check p)</td><td>${t.p_value.toFixed(4)} (${t.aa_p_value.toFixed(3)})</td></tr>
+  </table>
+  <p class="note">${t.decision}</p>`;
+
+const q = D.quality[0];
+const dupes = sum(D.duplicates, 'duplicate_rows_removed');
+const dq = [
+  ['Staged rows', fmtInt(q.staged_rows)], ['Exact duplicate rows removed', fmtInt(dupes)],
+  ['Missing category code', fmtPct(q.missing_category_code / q.staged_rows)], ['Missing brand', fmtPct(q.missing_brand / q.staged_rows)],
+  ['Missing session id', fmtInt(q.missing_session)], ['Price ≤ 0 (excluded from revenue)', fmtInt(q.non_positive_price)],
+  ['Hours with traffic but 0 purchases logged', fmtInt(D.gap_hours[0].hours)],
+  ['Event window (UTC)', `${q.first_event.slice(0, 16)} → ${q.last_event.slice(0, 16)}`],
+];
+document.getElementById('dqTable').innerHTML = dq.map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join('');
+</script>
+</body>
+</html>
