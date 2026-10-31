@@ -80,7 +80,7 @@ a { color: var(--brand); }
 .hero h1 em { font-style: normal; background: linear-gradient(90deg, #b9a2ff, #f0a93a); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .hero p.lead { font-size: clamp(16px, 1.6vw, 19px); color: rgb(255 255 255 / .78); margin: 0 0 28px; max-width: 560px; }
 .hero-ctas { display: flex; flex-wrap: wrap; gap: 12px; }
-.hero-caption { position: absolute; z-index: 2; right: 16px; bottom: 28px; max-width: 330px; font: 12.5px/1.5 var(--font-mono); color: rgb(255 255 255 / .62); text-align: right; }
+.hero-caption { position: absolute; z-index: 2; right: 16px; bottom: 28px; max-width: 470px; font: 12.5px/1.5 var(--font-mono); color: rgb(255 255 255 / .62); text-align: right; }
 .hero-caption b { color: #f0a93a; font-weight: 500; }
 .legend-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin: 0 4px 0 10px; vertical-align: 1px; }
 @media (max-width: 860px) {

@@ -77,19 +77,28 @@ if (canvas && D && supportsWebGL()) {
   group.add(columns, grid);
   scene.add(group);
 
+  let wide = false, baseRotY = 0;
   function resize() {
     const w = canvas.clientWidth, h = canvas.clientHeight;
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
-    // Pull back until all 61 columns (plus margin) fit the screen width.
     const halfFov = THREE.MathUtils.degToRad(camera.fov / 2);
-    const wide = w >= 1000;
-    const frameW = width + (wide ? 9 : 2.5);  // wide screens: extra room on the left for the headline
-    const dist = Math.max(11, frameW / 2 / (Math.tan(halfFov) * camera.aspect));
-    camera.position.set(0, dist * 0.32, dist);
-    camera.lookAt(0, MAX_H * 0.42, 0);
+    wide = w >= 1000;
+    if (wide) {
+      // Wide screens: the row recedes into depth on the right, leaving the left for the headline.
+      camera.position.set(0, 4.6, 17);
+      camera.lookAt(0, 3.2, 0);
+      group.position.set(7.2, 0, -5);
+    } else {
+      // Narrow screens: face-on, pulled back until all 61 columns fit the width.
+      const dist = Math.max(11, (width + 2.5) / 2 / (Math.tan(halfFov) * camera.aspect));
+      camera.position.set(0, dist * 0.32, dist);
+      camera.lookAt(0, MAX_H * 0.42, 0);
+      group.position.set(0, 0, 0);
+    }
     camera.updateProjectionMatrix();
-    group.position.x = wide ? 3.6 : 0;
+    baseRotY = wide ? 1.0 : 0;
+    group.rotation.y = baseRotY;
   }
   resize();
   addEventListener("resize", resize);
@@ -113,7 +122,7 @@ if (canvas && D && supportsWebGL()) {
       }
       geo.attributes.position.needsUpdate = true;
     }
-    group.rotation.y += ((pointerX * 0.35 + Math.sin(t * 0.15) * 0.12) - group.rotation.y) * 0.04;
+    group.rotation.y += ((baseRotY + pointerX * 0.3 + Math.sin(t * 0.15) * 0.1) - group.rotation.y) * 0.04;
     group.rotation.x += ((pointerY * 0.08) - group.rotation.x) * 0.04;
     dust.rotation.y = t * 0.01;
     renderer.render(scene, camera);
