@@ -5,3 +5,5 @@ data/tmp/
 data/sample_test/
 __pycache__/
 .claude/
+
+.vercel

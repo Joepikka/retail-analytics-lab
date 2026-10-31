@@ -2,7 +2,7 @@
 
 An end-to-end analytics project. It processes 4.6 GB of compressed e-commerce clickstream data (about 110M events, Oct–Nov 2019) through a reproducible pipeline: ingestion and quality checks, a DuckDB star schema, SQL analysis marts with data tests, a dashboard, an Excel KPI workbook, an A/B test design, and a written decision memo.
 
-**[Live dashboard](https://joepikka.github.io/retail-analytics-lab/dashboard/)** · **[Decision memo](reports/decision_memo.md)**
+**[Live dashboard](https://retail-analytics-lab.vercel.app)** (mirror: [GitHub Pages](https://joepikka.github.io/retail-analytics-lab/dashboard/)) · **[Decision memo](reports/decision_memo.md)**
 
 **Business questions**
 1. How do traffic, conversion and revenue move over time?
